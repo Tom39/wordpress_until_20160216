@@ -1,0 +1,59 @@
+@charset "UTF-8";
+
+/*----------------------------------------------------------------------------------------------------------
+
+　　初期設定
+
+  ----------------------------------------------------------------------------------------------------------*/
+
+html {
+	height:100%;
+}
+
+textarea {
+	resize: none;
+
+	font-size: 120%;
+	border:1px solid #777;
+    padding: 5px;
+/*    color: #999;*/
+/*    background: #fff;
+    background: -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        from(#eee),
+        to(#fff)
+    );*/
+    -webkit-border-radius: 5px;
+     
+    /* Firefox */
+/*    background: -moz-linear-gradient(
+        top,
+        #eee,
+        #fff
+    );*/
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+     
+    /* IE */
+/*    filter:progid:DXImageTransform.Microsoft.gradient
+        (startColorstr=#ffeeeeee,endColorstr=#ffffffff);
+    zoom: 1;*/
+    color: #FFFAF0;
+    /*border:1px solid #444;*/
+    background-color: #444444;
+    background: -webkit-gradient(linear, left top, left bottom, from(#444444), to(#333333));
+    background-image: -webkit-linear-gradient(to bottom, #444444 0%, #333333 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
+    background-image: -moz-linear-gradient(to bottom, #444444 0%, #333333 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
+    background-image: -o-linear-gradient(to bottom, #444444 0%, #333333 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
+    background-image: linear-gradient(to bottom, #444444 0%, #333333 100%) repeat scroll 0 0 rgba(0, 0, 0, 0);
+
+
+}
+
+/*----------------------------------------------------------------------------------------------------------
+
+　　ベースレイアウト
+
+  ----------------------------------------------------------------------------------------------------------*/
