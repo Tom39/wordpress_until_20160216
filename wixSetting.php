@@ -1,15 +1,38 @@
 <?php
 
+define( 'wix_style', plugins_url('/css/wixSetting.css', __FILE__) );
+define( 'wix_js', plugins_url('/js/wixSetting.js', __FILE__) );
+
+require_once( dirname( __FILE__ ) . '/patternMatching.php' );
+
 add_action( 'admin_init', 'wix_admin_init' );
 add_action( 'admin_menu', 'wix_admin_menu' );
 
+
 function wix_admin_init() {
-	/* スタイルシートを登録 */
-	wp_register_style( 'wix-css', plugins_url('/css/wix-style.css', __FILE__) );
+	wp_register_style( 'wix-style', wix_style );
+	wp_register_script( 'wix-js', wix_js );
 }
 
-function wix_admin_settings_css() {
-	wp_enqueue_style( 'wix-css', plugins_url('/css/wix-style.css', __FILE__), array() );
+//スクリプトの読み込み
+function wix_admin_settings_scripts() {
+	wp_enqueue_style( 'wix-style', wix_style, array() );
+	wp_enqueue_script( 'wix-js', wix_js, array('jquery') );
+
+	//jQuery UI
+	global $wp_scripts;
+    $ui = $wp_scripts->query('jquery-ui-core');
+    wp_enqueue_style(
+        'jquery-ui',
+        "//ajax.googleapis.com/ajax/libs/jqueryui/{$ui->ver}/themes/smoothness/jquery-ui.min.css",
+        false,
+        null
+    );
+    wp_enqueue_script(
+        'jquery-ui',
+        "//ajax.googleapis.com/ajax/libs/jqueryui/{$ui->ver}/jquery-ui.min.js",
+        array('jquery')
+    );
 }
 
 function wix_admin_menu() {
@@ -22,35 +45,218 @@ function wix_admin_menu() {
 		'wix_admin_settings' 
 	);
 
-	add_action( 'admin_enqueue_scripts', 'wix_admin_settings_css' );
+	add_action( 'admin_enqueue_scripts', 'wix_admin_settings_scripts' );
 
 }
 
-function wix_admin_settings(){
-	?>
-	<div class="wrap">
-		<?php    echo '<h2>' . __( 'WIX PatternFile Options', 'wix_patternfile' ) . '</h2>'; ?>
 
-		<?php
-			if ( file_exists( PatternFile ) && is_readable( PatternFile ) ) {
-				// var_dump( plugins_url('/css/wix-style.css', __FILE__) );
-		?>
-			<form id="patternFile_form" method="post" action="">
-				<textarea id="patternFileContents">
-					<?php
-						$file = file_get_contents( PatternFile, FILE_USE_INCLUDE_PATH );
-						echo $file;
-					?>
-				</textarea>
-			</form>
-		<?php
-			} else {
-				echo 'ないよ';
+//管理画面でのWIX設定ページ
+function wix_admin_settings(){
+?>
+<div class="wrap">
+<?php
+	echo '<h2>' . __( 'WIX PatternFile Options', 'wix_patternfile_options' ) . '</h2>';
+
+	if ( file_exists( PatternFile ) && is_readable( PatternFile ) ) {
+		global $pm;
+		$patternFile = $pm -> returnCandidates();
+?>
+	<div>
+		<form id="patternFile_form" method="post" action="">
+			<?php wp_nonce_field( 'my-nonce-key', 'nonce_patternFile' ); ?>
+
+			<p>
+				パターンファイルの更新: <input type="submit" name="update_patternFile" 
+										value= "<?php echo esc_attr( __( 'Update', 'admin-wix-patternFile' ) ); ?>" 
+										class="button button-primary button-large" >
+				
+				フォームの追加: <input type="button" id="add_patternFile" 
+				value= "<?php echo esc_attr( __( 'Add', 'admin-wix-patternFile' ) ); ?>" 
+				class="button button-primary button-large" >
+			</p>	
+
+			<p>
+				<input type="text" name="hostName" value="<?php echo $pm -> matchingHostName; ?>">
+			</p>
+
+			<ol id="pattern_wid">
+<?php
+		$roop = 0;
+		foreach ( $patternFile as $key => $value ) {
+			if ( strpos( $value, '-only' ) !== false ) $value = str_replace( '-', ':', $value );
+			else $value = str_replace( '-', ',', $value );
+			
+			echo '<li>';
+			echo '<input type="text" name="pattern[' . $roop . ']" value=' . esc_attr( $key ) . '> ';
+			echo '<input type="text" name="wid[' . $roop . ']" value=' . esc_attr( $value ) . '> ';
+			//フォームが１個なら削除ボタンは生成しない
+			if ( count($patternFile) != 1 ) {
+			echo '<input type="button" value="' . 
+					esc_attr( __( 'Delete', 'admin-wix-patternFile' ) ) . 
+					'" class="button button-primary button-large">';
 			}
-		?>
+			echo '</li>';
+			$roop++;
+		}
+?>		
+			</ol>
+		</form>
 	</div>
 
+<?php } else { ?>
+
+	<div>
+		<form id="patternFile_form" method="post" action="">
+			<?php wp_nonce_field( 'my-nonce-key', 'nonce_patternFile' ); ?>
+
+			<p>
+				パターンファイルの作成: <input type="submit" name="update_patternFile" 
+										value= "<?php echo esc_attr( __( 'Create', 'admin-wix-patternFile' ) ); ?>" 
+										class="button button-primary button-large" >
+				
+				フォームの追加: <input type="button" id="add_patternFile" 
+				value= "<?php echo esc_attr( __( 'Add', 'admin-wix-patternFile' ) ); ?>" 
+				class="button button-primary button-large" >
+			</p>	
+
+			<p>
+				サーバホスト名: 
+				<input type="text" name="hostName" value="<?php echo DB_HOST ?>">
+			</p>
+
+			<ol id="pattern_wid">
+				<li>
+					<input type="text" name="pattern[0]" placeholder="/test.html">
+					<input type="text" name="wid[0]" placeholder="128">
+				</li>
+			</ol>
+		</form>
+	</div>
+
+<?php } ?>
+
+</div>
+
+<?php
+}
+
+//パターンファイルの更新
+add_action( 'admin_init', 'update_patternFile' );
+
+function update_patternFile() {
+	//nonceの値の✔
+	if ( isset( $_POST['nonce_patternFile'] ) && $_POST['nonce_patternFile'] ) {
+
+		if ( check_admin_referer( 'my-nonce-key', 'nonce_patternFile' ) ) {
+
+			$e = new WP_Error();
+
+			if ( isset( $_POST['update_patternFile'] ) && $_POST['update_patternFile'] ) {
+				//更新処理
+				if ( isset( $_POST['pattern'] ) && $_POST['pattern'] && isset( $_POST['wid'] ) && $_POST['wid'] ) {
+
+					// FILE_APPEND フラグはファイルの最後に追記することを表し、
+					// LOCK_EX フラグは他の人が同時にファイルに書き込めないことを表します。
+					// stripslashesでアンエスケープ
+					if ( !isset( $_POST['hostName'] ) || empty($_POST['hostName']) )
+						$hostName = '<' . DB_HOST . '>' . "\n";
+					else
+						$hostName = '<' . $_POST['hostName'] . '>' . "\n";
+
+					file_put_contents( PatternFile, $hostName, FILE_USE_INCLUDE_PATH | LOCK_EX );
+
+					foreach ( $_POST['pattern'] as $key => $pattern ) {
+						$pattern_wid = "\t" . stripslashes($pattern) . ' : ' . $_POST['wid'][$key] . "\n";
+						file_put_contents( PatternFile, $pattern_wid, FILE_APPEND | LOCK_EX );
+					}
+
+					set_transient( 'update_WIX', 'パターンファイルを更新しました', 10 );
+				}
+			}
+		} else {
+			$e -> add('error', __( 'Please enter valid patterns&wids.', 'update_patternFile' ) );
+			set_transient( 'update_WIX_errors', $e->get_error_message(), 10 );
+		}
+	}
+	delete_option( 'pattern' );
+}
+
+//更新・エラーメッセージを表示する
+add_action( 'admin_notices', 'patternFile_notices' );	
+
+function patternFile_notices() {
+	?>
+	<?php if ( $messages = get_transient( 'update_WIX_errors' ) ): ?>
+	<div class="error">
+		<ul>
+			<?php foreach( $messages as $message ): ?>
+				<li><?php echo esc_html($message); ?></li>
+			<?php endforeach; ?>
+		</ul>
+	</div>
+	<?php elseif ( $messages = get_transient( 'update_WIX' ) ): ?>
+	<div class="updated">
+		<ul>
+			<?php foreach( (array)$messages as $message ): ?>
+				<li><?php echo esc_html($message); ?></li>
+			<?php endforeach; ?>
+		</ul>
+	</div>
+	<?php endif; ?>
 	<?php
 }
+
+
+
+
+// function custom_gettext( $translated_text, $text, $domain ) {
+  	
+//  	switch ( $text ) {
+//  		case 'Dashboard':
+//  			$translated_text = __('Home',$domain);
+//  			break;
+//  	}
+
+// 	return $translated_text;
+// }
+// add_filter( 'gettext', 'custom_gettext', 20, 3 );
+
+
+
+// function patternFileContents() {
+// 	global $pm;
+// 	$patternFile = array();
+
+// 	try {
+// 		$file = fopen( PatternFile, 'r' );
+ 
+// 		/* ファイルを1行ずつ出力 */
+// 		if( $file ){
+// 			$host_name = '';
+// 			$pattern_array = array();
+// 			$flag = false;
+
+// 			while ( $line = fgets($file) ) {
+// 				if ( $pm -> startsWith( $line, '<' ) ) {
+// 					if ( $flag == true ) {
+// 						$patternFile += array( $host_name => $pattern_array );
+// 						$pattern_array = array();
+// 					}
+// 					$host_name = $line;
+// 				} else {
+// 					$flag = true;
+// 					array_push( $pattern_array, $line );
+// 				}
+// 			}
+// 			$patternFile += array( $host_name => $pattern_array );
+// 		}
+// 	} catch ( Exception $e ) {
+// 		echo '捕捉した例外: ',  $e -> getMessage(), "\n";
+// 	} finally {
+// 		fclose( $file );
+// 	}
+
+// 	return $patternFile;
+// }
 
 ?>

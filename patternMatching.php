@@ -5,6 +5,7 @@ $pm = new patternMatching;
 class patternMatching {
 	private $WixID = '0';
 	private $RequestPath = '';
+	public $matchingHostName = '';
 
 	function returnWixID() {
 
@@ -86,6 +87,8 @@ class patternMatching {
 			}
 
 			if ( $no_attachFlag == false ) {
+				$endLocation = array();
+				$patternLength = array();
 
 				foreach ( $secondCandidates as $key => $row ){
 
@@ -165,6 +168,7 @@ class patternMatching {
 
 	function returnCandidates() {
 		global $pm;
+		global $matchingHostName;
 		$candidates = array();
 
 		try{
@@ -175,7 +179,7 @@ class patternMatching {
 				//ファイル内容
 				$fileContents = file_get_contents( PatternFile, FILE_USE_INCLUDE_PATH );
 
-				//ホスト名探索
+				//ホスト名探索($matches[1]にホスト名群)
 				preg_match_all('/<(.*)>/', $fileContents, $matches);
 
 				$subContents_num = array();
@@ -183,17 +187,20 @@ class patternMatching {
 				//パターンファイル内該当箇所
 				$subContents = '';
 
-
 				foreach ( $matches[1] as $key => $value ) {
 
 					if ( !empty( $value ) && preg_match( '/' . $value . '/', $requestHost ) ) {
-
+						
+						$pm -> matchingHostName = $value;
+						
+						//該当ホスト名の次に< >がある場合
 						if ( isset( $matches[0][$key + 1] ) ) {
 							array_push( 
 										$subContents_num, 
 										strpos( $fileContents, $matches[0][$key] ) + strlen($matches[0][$key] ),
 										strpos( $fileContents, $matches[0][$key + 1] ) 
 										);
+							//該当ホスト名 ~ 次の<ホスト名>までを抽出。substrの第３引数は文字数
 							$subContents = substr( $fileContents, $subContents_num[0], $subContents_num[1] - $subContents_num[0] );
 						} else {
 							array_push( 
@@ -202,7 +209,6 @@ class patternMatching {
 										);
 							$subContents = substr( $fileContents, $subContents_num[0] );
 						}
-
 						break;
 					}
 
@@ -235,7 +241,7 @@ class patternMatching {
 
 							array_push( $patterns, $value );
 
-							if ( $flag === true ) {
+							if ( $flag == true ) {
 								array_push( $wids, $tmp );
 								$tmp = '';
 							}
@@ -330,7 +336,11 @@ class patternMatching {
 	}
 
 	function requestURL_part( $option ) {
-		return parse_url( urldecode( get_permalink() ), $option );
+
+		if ( get_permalink() != '' )
+			return parse_url( urldecode( get_permalink() ), $option );
+		else
+			return parse_url( urldecode( get_admin_url() ), $option );
 	}
 
 	function subjectPath() {
