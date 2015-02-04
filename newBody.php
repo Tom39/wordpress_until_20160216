@@ -9,9 +9,9 @@ require_once( dirname( __FILE__ ) . '/patternMatching.php' );
 
 add_filter( 'the_excerpt', 'new_body' );
 add_filter( 'the_content', 'new_body' );
+// remove_all_filters( 'the_content' );
 
 function new_body( $content ) {
-
 	$patternMatching = new patternMatching;
 	$WixID = $patternMatching -> returnWixID();
 

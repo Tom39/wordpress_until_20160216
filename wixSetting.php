@@ -1,40 +1,10 @@
 <?php
 
-define( 'wix_style', plugins_url('/css/wixSetting.css', __FILE__) );
-define( 'wix_js', plugins_url('/js/wixSetting.js', __FILE__) );
-
 require_once( dirname( __FILE__ ) . '/patternMatching.php' );
 
-add_action( 'admin_init', 'wix_admin_init' );
 add_action( 'admin_menu', 'wix_admin_menu' );
 
-
-function wix_admin_init() {
-	wp_register_style( 'wix-style', wix_style );
-	wp_register_script( 'wix-js', wix_js );
-}
-
-//スクリプトの読み込み
-function wix_admin_settings_scripts() {
-	wp_enqueue_style( 'wix-style', wix_style, array() );
-	wp_enqueue_script( 'wix-js', wix_js, array('jquery') );
-
-	//jQuery UI
-	global $wp_scripts;
-    $ui = $wp_scripts->query('jquery-ui-core');
-    wp_enqueue_style(
-        'jquery-ui',
-        "//ajax.googleapis.com/ajax/libs/jqueryui/{$ui->ver}/themes/smoothness/jquery-ui.min.css",
-        false,
-        null
-    );
-    wp_enqueue_script(
-        'jquery-ui',
-        "//ajax.googleapis.com/ajax/libs/jqueryui/{$ui->ver}/jquery-ui.min.js",
-        array('jquery')
-    );
-}
-
+//メニュー画面の作成
 function wix_admin_menu() {
 
 	add_menu_page(
