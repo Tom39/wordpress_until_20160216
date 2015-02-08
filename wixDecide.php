@@ -11,23 +11,17 @@ function ajaxURL() {
 	printf($str, $ajaxurl);
 }
 
+
+
+
 add_action( 'wp_ajax_wix_decide_preview', 'wix_decide_preview' );
 add_action( 'wp_ajax_nopriv_wix_decide_preview', 'wix_decide_preview' );
 
 function wix_decide_preview() {
 	header("Access-Control-Allow-Origin: *");
 	header('Content-type: application/javascript; charset=utf-8');
-    
- //    $json = array(
-	// 		"blog" => $_GET['href'],
-	// 		"author" => $_GET['target']
-	// 	);
-	// $callback = $_GET["callback"];
-	// echo $callback."(" . json_encode($json) . ")";
 
 
-
-	// $post_ID = (int) substr( $_GET['target'], strlen('wp-preview-') );
 	$post_ID = (int) substr( $_POST['target'], strlen('wp-preview-') );
 	$_POST['ID'] = $post_ID;
 
@@ -43,7 +37,6 @@ function wix_decide_preview() {
 
 	$query_args = array( 'preview' => 'true' );
 	$query_args['preview_id'] = $post->ID;
-	// $query_args['preview_nonce'] = wp_create_nonce( 'post_preview_' . $post->ID );
 	$query_args['post_format'] = empty( $_POST['post_format'] ) ? 'standard' : sanitize_key( $_POST['post_format'] );
 
 	$url = add_query_arg( $query_args, urldecode(esc_url_raw(get_permalink( $post->ID ))) );
@@ -52,13 +45,12 @@ function wix_decide_preview() {
 
 	if ( ! is_wp_error( $response ) && wp_remote_retrieve_response_code( $response ) === 200 ) {
 		
-		// $callback = $_GET["callback"];
 		$response_body = wp_remote_retrieve_body( $response );
+
 		$json = array(
-			// "url" => $url
-			"body" => $response_body
+			"url" => $url
+			// "body" => $response_body
 		);
-	    // echo $callback."(" . json_encode($json) . ")";
 		 echo json_encode( $json );
 
 	} else {
