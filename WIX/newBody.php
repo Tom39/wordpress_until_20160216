@@ -63,6 +63,7 @@ function new_body( $content ) {
 
 		// return $content;
 		return $response;
+		
 	} else {
 		return $content;
 	}
